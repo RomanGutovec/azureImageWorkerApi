@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using ImagesWorkerAPI.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using NLog;
 
 namespace ImagesWorkerAPI.Controllers
 {
@@ -14,6 +16,7 @@ namespace ImagesWorkerAPI.Controllers
     [ApiController]
     public class ImagesController : ControllerBase
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly IBlobService service;
         private readonly IQueueService queueService;
         public ImagesController(IBlobService service, IQueueService queueService)
@@ -27,9 +30,18 @@ namespace ImagesWorkerAPI.Controllers
         [Route("upload")]
         public async Task<IActionResult> Post(IFormFile uploadedFile)
         {
+            Logger.Info($"Start post image to the server.");
+            try
+            {
             await service.UploadBlobAsync(uploadedFile.OpenReadStream(), uploadedFile.FileName);
 
             await queueService.AddMessageAsync(uploadedFile.FileName);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, $"Some error occured while posting image.");
+                throw;
+            }
 
             return Ok();
         }
@@ -37,11 +49,32 @@ namespace ImagesWorkerAPI.Controllers
         // GET: api/Images/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
-        {            
-            var byteArray = await service.GetBlobByUrlAsync(id);
-            var stream = new MemoryStream(byteArray);
+        {
+            Logger.Info($"Start getting image with id: {id}.");
 
-            return File(stream, "image/jpeg");
+            try
+            {
+
+            var byteArray = await service.GetBlobByUrlAsync(id);
+
+                if (byteArray == null)
+                {
+                    Logger.Info($"No image with id {id} was found.");
+                    return NotFound();
+                }
+
+                Logger.Info($"Retrieving image with id {id} to response.");
+
+                using (var stream = new MemoryStream(byteArray))
+                {
+                    return File(stream, "image/jpeg");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, $"Some error occured while getting image.");
+                throw;
+            }
         }        
     }
 }
