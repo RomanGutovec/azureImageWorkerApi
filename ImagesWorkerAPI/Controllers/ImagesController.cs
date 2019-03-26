@@ -33,9 +33,9 @@ namespace ImagesWorkerAPI.Controllers
             Logger.Info($"Start post image to the server.");
             try
             {
-            await service.UploadBlobAsync(uploadedFile.OpenReadStream(), uploadedFile.FileName);
+                await service.UploadBlobAsync(uploadedFile.OpenReadStream(), uploadedFile.FileName);
 
-            await queueService.AddMessageAsync(uploadedFile.FileName);
+                await queueService.AddMessageAsync(uploadedFile.FileName);
             }
             catch (Exception ex)
             {
@@ -54,8 +54,7 @@ namespace ImagesWorkerAPI.Controllers
 
             try
             {
-
-            var byteArray = await service.GetBlobByUrlAsync(id);
+                var byteArray = await service.GetBlobByUrlAsync(id);
 
                 if (byteArray == null)
                 {
@@ -65,16 +64,15 @@ namespace ImagesWorkerAPI.Controllers
 
                 Logger.Info($"Retrieving image with id {id} to response.");
 
-                using (var stream = new MemoryStream(byteArray))
-                {
-                    return File(stream, "image/jpeg");
-                }
+                var stream = new MemoryStream(byteArray);
+                return File(stream, "image/jpeg");
+
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, $"Some error occured while getting image.");
                 throw;
             }
-        }        
+        }
     }
 }

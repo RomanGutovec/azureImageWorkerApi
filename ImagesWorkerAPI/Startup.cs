@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ImagesWorkerAPI.Filters;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NLog.Web;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ImagesWorkerAPI
@@ -73,6 +75,8 @@ namespace ImagesWorkerAPI
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
+
+            //env.ConfigureNLog("nlog.config");
 
             app.UseMvc();
         }
